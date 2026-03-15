@@ -3,91 +3,33 @@
  */
 package romanianprogram;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.util.HashMap;
-
 public class App {
 
-    String Path = "app\\src\\main\\resources\\tokens.txt";
-
-    public HashMap<String, String> readTokensFromText() {
-        var tokensHashMap = new HashMap<String, String>(); 
-        try (var reader = new BufferedReader(new FileReader(Path))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] splitted = line.split(":");
-                tokensHashMap.put(splitted[0], splitted[1]);
-            }
-        } catch (Exception e) {
-            System.err.println("Error reading file: " + e.getMessage());
-        }
-        return tokensHashMap;
-    }
-
-    public HashMap<String, String> invertHashMap(HashMap<String, String> hashMap) {
-        var invertedHashMap = new HashMap<String, String>();
-        var keySet = hashMap.keySet();
-        var valuesCollection = hashMap.values();
-        var keySetIter = keySet.iterator();
-        var valuesCollecitonIter = valuesCollection.iterator();
-        while (keySetIter.hasNext() && valuesCollecitonIter.hasNext()) {
-            invertedHashMap.put(valuesCollecitonIter.next(), keySetIter.next());
-        }
-        return invertedHashMap;
-    }
-
-    public String cyrillicToLatin(String input, HashMap<String, String> tokensHashMap) {
-        String output = new String();
-        if (input.isEmpty()) {
-            throw new IllegalArgumentException("Input string is empty");
-        } else {
-            for (var c : input.toCharArray()) {
-                if (c == ' ' || c == '.' || c == ',') {
-                    output += c;
-                } else {
-                    output += tokensHashMap.get(String.valueOf(c));
-                }
-            }
-        }
-        return output;
-    }
-
-    public String latinToCyrillic(String input, HashMap<String, String> tokensHashMap) {
-        String output = new String();
-        if (input.isEmpty()) {
-            throw new IllegalArgumentException("Input string is empty");
-        } else {
-            for (int idx = 0; idx < input.length(); idx++) {
-                if (input.charAt(idx) == ' ' || input.charAt(idx) == ',' || input.charAt(idx) == '.') {
-                    output += String.valueOf(input.charAt(idx));
-                } else {
-                    if (idx + 1 != input.length() && idx + 2 != input.length()) {
-                        if (tokensHashMap.containsKey(String.format("%s%s%s", input.charAt(idx), input.charAt(idx+1), input.charAt(idx+2)))) {
-                            output += tokensHashMap.get(String.format("%s%s%s", input.charAt(idx), input.charAt(idx+1), input.charAt(idx+2)));
-                            idx += 2;
-                            continue;
-                        }
-                        if (tokensHashMap.containsKey(String.format("%s%s", input.charAt(idx), input.charAt(idx+1)))) {
-                            output += tokensHashMap.get(String.format("%s%s", input.charAt(idx), input.charAt(idx+1)));
-                            idx += 1;
-                            continue;
-                        }
-                    } if (tokensHashMap.containsKey(String.format("%s", input.charAt(idx)))) {
-                            output += tokensHashMap.get(String.format("%s", input.charAt(idx)));
-                    }
-                }
-            }
-        }
-        return output;
-    }
+    static String TokensPath = "app\\src\\main\\resources\\tokens.txt";
 
     public static void main(String[] args) {
-        App instance = new App();
-        HashMap<String, String> tokensHashMap = instance.readTokensFromText();
-        String result = instance.cyrillicToLatin("Несколько переменных И Увеличение счетчика в теле цикла", tokensHashMap);
-        System.out.println(result);
-        System.out.println(instance.latinToCyrillic(result, instance.invertHashMap(tokensHashMap)));
+        try {
+            RomanianConverter converter = RomanianConverter.getInstance();
+            RomanianReader reader = RomanianReader.getInstance();
+
+            if (args[0].contentEquals("--CyrillicToLatin")) {
+                System.out.println(converter.cyrillicToLatin(reader.textFromFileReader(args[1]), reader.tokensFromFileReader(TokensPath)));
+            } else {
+                System.err.println("Type of operation fail: type --Help flag for help");
+            }
+            if (args[0].contentEquals("--LatinToCyrillic")) {
+                System.out.println(converter.latinToCyrillic(reader.textFromFileReader(args[1]), reader.tokensFromFileReader(TokensPath)));
+            } else {
+                System.err.println("Type of operation fail: type --Help flag for help");
+            }
+            if (args[0].contentEquals("--Help")) {
+                System.out.printf("\narg[0]\t--CyrillicToLatin\tConvert cyrillic text to a latin\narg[0]\t--LatinToCyrillic\tConvert latin text to a cyrillic\n\narg[1]\t--Path\tPath to a file\n");
+            } else {
+                System.err.println("Type of operation fail: type --Help flag for help");
+            }
+        } catch (Exception e) {
+            System.err.println("Type of operation fail: type --Help flag for help");
+        }
     }
 
 }
