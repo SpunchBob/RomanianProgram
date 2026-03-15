@@ -6,7 +6,6 @@ package romanianprogram;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 
 public class App {
 
@@ -38,12 +37,6 @@ public class App {
         return invertedHashMap;
     }
 
-    public boolean contains(String input, HashMap<String, String> tokensHashMap) {
-        if (!tokensHashMap.containsKey(input)) {
-            return false;
-        } return true;
-    }
-
     public String cyrillicToLatin(String input, HashMap<String, String> tokensHashMap) {
         String output = new String();
         if (input.isEmpty()) {
@@ -62,18 +55,26 @@ public class App {
 
     public String latinToCyrillic(String input, HashMap<String, String> tokensHashMap) {
         String output = new String();
-        
         if (input.isEmpty()) {
             throw new IllegalArgumentException("Input string is empty");
         } else {
-            var buffer = new String();
             for (int idx = 0; idx < input.length(); idx++) {
-                buffer += String.valueOf(input.charAt(idx));
-                if (input.charAt(idx) == ' ' || input.charAt(idx) == '.' || input.charAt(idx) == ',') {
+                if (input.charAt(idx) == ' ' || input.charAt(idx) == ',' || input.charAt(idx) == '.') {
                     output += String.valueOf(input.charAt(idx));
                 } else {
-                    if (contains(buffer, tokensHashMap)) {
-                        output += buffer;
+                    if (idx + 1 != input.length() && idx + 2 != input.length()) {
+                        if (tokensHashMap.containsKey(String.format("%s%s%s", input.charAt(idx), input.charAt(idx+1), input.charAt(idx+2)))) {
+                            output += tokensHashMap.get(String.format("%s%s%s", input.charAt(idx), input.charAt(idx+1), input.charAt(idx+2)));
+                            idx += 2;
+                            continue;
+                        }
+                        if (tokensHashMap.containsKey(String.format("%s%s", input.charAt(idx), input.charAt(idx+1)))) {
+                            output += tokensHashMap.get(String.format("%s%s", input.charAt(idx), input.charAt(idx+1)));
+                            idx += 1;
+                            continue;
+                        }
+                    } if (tokensHashMap.containsKey(String.format("%s", input.charAt(idx)))) {
+                            output += tokensHashMap.get(String.format("%s", input.charAt(idx)));
                     }
                 }
             }
@@ -84,12 +85,7 @@ public class App {
     public static void main(String[] args) {
         App instance = new App();
         HashMap<String, String> tokensHashMap = instance.readTokensFromText();
-        var keys = instance.invertHashMap(tokensHashMap).keySet().iterator();
-        var values = instance.invertHashMap(tokensHashMap).values().iterator();
-        while (keys.hasNext() && values.hasNext()) {
-            System.out.printf("%s:%s\n", keys.next(), values.next());
-        }
-        String result = instance.cyrillicToLatin("просто жопы и щенки, в ананасе и литрах мочи.", tokensHashMap);
+        String result = instance.cyrillicToLatin("Несколько переменных И Увеличение счетчика в теле цикла", tokensHashMap);
         System.out.println(result);
         System.out.println(instance.latinToCyrillic(result, instance.invertHashMap(tokensHashMap)));
     }
